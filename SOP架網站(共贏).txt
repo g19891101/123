@@ -1,0 +1,121 @@
+環境確認
+1. 安裝完環境請確認 IIS 是關閉的，其相關套件也關閉
+2. 網路暢通
+3. 確認 os 是 X86 還是 64 位元，會影響到下載的套件
+
+需要安裝
+1. AppServ 2.5.10
+    http://www.appservnetwork.com/modules.php?name=News&file=article&sid=46
+    (1). Apache
+    (2). Mysql
+    (3). PHP
+    (4). phpMyAdmin
+2. ActivePython 2.X.X　版本(依據 os 版本選擇)
+    http://www.activestate.com/activepython/downloads
+    
+3. 必須手動安裝的套件
+    http://www.lfd.uci.edu/~gohlke/pythonlibs/
+    (1). pip  http://www.lfd.uci.edu/~gohlke/pythonlibs/#pip
+    (2). mysql-python  http://www.lfd.uci.edu/~gohlke/pythonlibs/#mysql-python
+    (3). Pillow  http://www.lfd.uci.edu/~gohlke/pythonlibs/#pil
+    
+4. 安裝 git 環境
+    (1). git bash (一定要裝)
+    (2). TortoiseGit (選裝，但有裝好管理，當然也可以用其他的 git 管理工具)
+    
+5. git clone 專案 https://github.com/Coevotech/crfo_market_web.git
+    最好路徑與 crfo 61.222.29 一樣在 D 之下
+
+6. 安裝其他 python 套件
+    開啟命令提示字元工具
+    進入 project 路徑
+    pip install -r requirements\project.txt
+    利用 python 套件管理工具來安裝 project 相依套件
+    
+安裝細節
+1. AppServ
+    下載後自動執行安裝
+    建議全部安裝，這樣本機會比較好操作資料庫
+    安裝過程會提示
+    (1).apache 設定的 domain email 可以輸入暫時資料，
+        等確定之後再去修改 httpd.conf 即可     
+        port:80 預設不動       <<root   root@gmail.com>>
+    (2).mysql 的 root 密碼，請設定為小寫的 coevo5311
+    
+    安裝確認方式
+    確認 apache 有啟動
+    伺服器管理員 當中的 Apache2 狀態
+    啟動時用瀏覽器檢視
+    http://localhost
+    會出現 php 撰寫的 Apache 訊息頁
+    
+2. 建立資料庫
+    利用 phpmyadmin 或者 命令提示字元工具
+    建立 資料庫 cfhqetl
+    以下以使用命令提示字元工具為例的狀況需要用到的指令
+    進入 mysql 用 root 登入，需要使用 密碼
+    >mysql -uroot -p     << cd c:\  就能到C槽。cd Appserv 到Appserv 檔案夾這   >>
+    輸入 root 密碼
+    >coevo5311
+    進入 mysql 之後
+    mysql> CREATE DATABASE cfhqetl;
+    回覆 OK 訊息,
+    檢查   
+    mysql> SHOW DATABASES;
+    看是否有回覆 cfhqetl
+    
+3. 將 61.222.29.236 當中的資料表 dump 至測試機中
+    crfo 61.222.29.236 主機中操作
+    (1). 開啟命令提示字元
+    (2). 進入要存檔的路徑
+    (3). >mysqldump -uroot -p cfhqetl > cfhqetl_currentdate.sql
+        輸入 mysql root 密碼 coevo5311
+    (4). 待跑完後 將　cfhqetl_currentdate.sql　copy 至 測試機
+    測試機 存入 .sql 檔案之後
+    (1). 開啟命令提示字元
+    (2). 進入存檔的路徑
+    (3). >mysql -uroot -p cfhqetl < cfhqetl_currentdate.sql
+        輸入 mysql root 密碼 coevo5311
+
+
+帳號    administrator
+密碼    Cre12370668
+
+        
+4. 同步圖檔
+    將 61.222.29.236 當中的圖檔同步至測試機中
+    crfo 61.222.29.236 主機中操作
+    (1). 打包 D:\crfo_market_web\static\media 資料夾 
+    (2). copy 至 測試機
+    測試機 存入 .sql 檔案之後
+    (1). 整個覆蓋至 測試機　project 的相同資料夾中，請完全覆蓋
+    
+5. project 蒐集動態檔案　至 project 資料夾   (此行程式的意思:   http://foofish.net/blog/63/django-compressor    )
+    (1). 開啟命令提示字元
+    (2). >python manage.py collectstatic
+        出現提示
+        >yse
+6. Apache 設定
+    (1). project/deploy/mod_wsgi.so copy 至 C:\AppServ\Apache2.2\modules
+    (2). 參考 project/deploy/httpd.conf 設定 C:\AppServ\Apache2.2\conf\httpd.conf
+        line 67     Listen 80
+        line 68     Listen 81
+        line 243    ServerName localhost:81
+        line 679
+                    LoadModule wsgi_module modules/mod_wsgi.so
+ 
+                    <VirtualHost *:80>
+                        DocumentRoot "D:/crfo_market_web"
+                        ServerName localhost:80
+                        # Other directives here
+                        Alias /static "D:/crfo_market_web/static/"
+                        Alias /media "D:/crfo_market_web/static/media/"
+                        <Directory "D:/crfo_market_web" >
+                        Order allow,deny
+                        Allow from all
+                        </Directory>
+                        WSGIScriptAlias / "D:/crfo_market_web/deploy/wsgi.py"
+                    </VirtualHost>
+
+7. 重啟 apahce
+    用瀏覽器瀏覽 http://localhost 即可
